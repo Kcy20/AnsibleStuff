@@ -1,0 +1,72 @@
+---
+# This playbook runs a command
+
+- name: script
+  hosts: Splunk_Indexer_members
+  remote_user: root
+
+  tasks:
+
+  - name: find disk space available.
+    shell: df -h
+    register: command_result
+
+  - name: Write results to logfile
+    blockinfile:
+      create: yes
+      path: "/tmp/1ansibleOutput.log"
+      insertafter: EOF
+      block: "{{ command_result.stdout }}"
+      marker: "#### {{ inventory_hostname }} {mark}"
+    delegate_to: localhost
+
+
+---
+# This playbook runs a bash script
+
+- name: script
+  hosts: Splunk_Indexer_members
+  remote_user: root
+
+  tasks:
+# /tools/infra/bin/add_temproot_user.sh -u temproot -p pass -e 45 -c RITM
+  - name: host script
+    script: /etc/ansible/scripts/script2.sh
+    register: command_result
+
+  - name: Write results to file
+    blockinfile:
+      create: yes
+      path: "/tmp/ansibleOutput.txt"
+      insertafter: EOF
+      block: "{{ command_result.stdout }}"
+      marker: "#### {{ inventory_hostname }} {mark}"
+    delegate_to: localhost
+
+
+---
+# This playbook runs a command
+
+- name: script
+  hosts: Splunk_Indexer_members
+  remote_user: root
+
+  tasks:
+
+  - name: Remove file (delete file)
+    file:
+      path: "/tmp/1ansibleOutput.log"
+      state: absent
+
+  - name: restart network service
+    shell: service network restart
+    register: command_result
+
+  - name: Write results to file
+    blockinfile:
+      create: yes
+      path: "/tmp/1ansibleOutput.log"
+      insertafter: EOF
+      block: "{{ command_result.stdout }}"
+      marker: "#### {{ inventory_hostname }} {mark}"
+    delegate_to: localhost
